@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prod-deployment
+  namespace: prodns
+  labels:
+    app: web
+    env: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      apptype: web
+      env: prod
+  template:
+    metadata:
+      name: prodtemp
+      labels:
+        apptype: web
+        env: prod
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: apache
+          image: ramalja2/wetech
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: prod-port
+              protocol: TCP
+              containerPort: 8080
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "100m"
+            limits:
+              memory: "100Mi"
+              cpu: "200m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prodsvc   #service name (it can be any name)
+  namespace: prodns
+spec:
+  ports:
+    - name: apache
+      port: 80 #service port
+      targetPort: 8080 #container port Docker image
+      protocol: TCP
+  selector:     #mapping to pod
+    apptype: web
+    env: prod
+
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prodingress
+  namespace: prodns
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: "www.cloudonline.xyz"
+      http:
+        paths:
+          - path: "/"
+            pathType: "Prefix"
+            backend:
+              service:
+                name: prodsvc
+                port:
+                  number: 80
