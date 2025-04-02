@@ -62,7 +62,6 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: "www.cloudonline.xyz"
       http:
         paths:
           - path: "/"
